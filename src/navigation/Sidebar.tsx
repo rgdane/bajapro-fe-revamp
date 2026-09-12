@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -29,97 +29,91 @@ export interface MenuItem {
   key: string;
   icon?: React.ReactNode;
   label: React.ReactNode;
+  /** Full URL untuk item tunggal (leaf). */
+  path?: string;
+  /** Base path grouping; child otomatis di-resolve jadi `${basePath}/${key}`. */
+  basePath?: string;
   children?: MenuItem[];
+}
+
+interface ResolvedMenuItem {
+  key: string;
+  icon?: React.ReactNode;
+  label: React.ReactNode;
+  href?: string;
+  children?: ResolvedMenuItem[];
+}
+
+function resolveItems(items: MenuItem[], inheritedBase = ""): ResolvedMenuItem[] {
+  return items.map((item) => {
+    const basePath = item.basePath ?? inheritedBase;
+    const href = item.path ?? (basePath && !item.children ? `${basePath}/${item.key}` : undefined);
+    return {
+      key: item.key,
+      icon: item.icon,
+      label: item.label,
+      href,
+      children: item.children ? resolveItems(item.children, basePath) : undefined,
+    };
+  });
+}
+
+function toMenuProps(items: ResolvedMenuItem[]): MenuProps["items"] {
+  return items.map((item) => ({
+    key: item.key,
+    icon: item.icon,
+    label: item.href ? <Link href={item.href}>{item.label}</Link> : item.label,
+    children: item.children ? toMenuProps(item.children) : undefined,
+  }));
 }
 
 export const allMenuItems: MenuItem[] = [
   {
     key: "dashboard",
     icon: <DashboardOutlined />,
-    label: <Link href="/dashboard">Dashboard</Link>,
+    label: "Dashboard",
+    path: "/dashboard",
   },
   {
-    key: "g-materi",
+    key: "manage-course",
     icon: <BookOutlined />,
     label: "Kelola Materi",
+    basePath: "/manage-user",
     children: [
-      {
-        key: "level",
-        label: <Link href="/level">Level</Link>,
-        icon: <DeploymentUnitOutlined />,
-      },
-      {
-        key: "course",
-        label: <Link href="/course">Course</Link>,
-        icon: <BlockOutlined />,
-      },
-      {
-        key: "question",
-        label: <Link href="/code_question">Question</Link>,
-        icon: <QuestionCircleOutlined />,
-      },
+      { key: "level", icon: <DeploymentUnitOutlined />, label: "Level" },
+      { key: "course", icon: <BlockOutlined />, label: "Course" },
+      { key: "question", icon: <QuestionCircleOutlined />, label: "Question" },
     ],
   },
   {
-    key: "g-pengguna",
+    key: "manage-user",
     icon: <UserOutlined />,
     label: "Kelola Pengguna",
+    basePath: "/manage-user",
     children: [
-      {
-        key: "roles",
-        label: <Link href="/roles">Roles</Link>,
-        icon: <SafetyCertificateOutlined />,
-      },
-      {
-        key: "kelas",
-        label: <Link href="/kelas">Kelas</Link>,
-        icon: <BankOutlined />,
-      },
-      {
-        key: "users",
-        label: <Link href="/users">Users</Link>,
-        icon: <TeamOutlined />,
-      },
-      {
-        key: "approval",
-        label: <Link href="/approval">Approval</Link>,
-        icon: <AppstoreAddOutlined />,
-      },
-      {
-        key: "permission",
-        label: <Link href="/permission">Permission</Link>,
-        icon: <SettingOutlined />,
-      },
+      { key: "roles", icon: <SafetyCertificateOutlined />, label: "Roles" },
+      { key: "kelas", icon: <BankOutlined />, label: "Kelas" },
+      { key: "user", icon: <TeamOutlined />, label: "Users" },
+      { key: "approval", icon: <AppstoreAddOutlined />, label: "Approval" },
+      { key: "permission", icon: <SettingOutlined />, label: "Permission" },
     ],
   },
   {
     key: "g-report",
     icon: <BarChartOutlined />,
     label: "Report",
+    basePath: "/report",
     children: [
-      {
-        key: "hasil-belajar",
-        label: <Link href="/report">Hasil Belajar</Link>,
-        icon: <BarChartOutlined />,
-      },
-      {
-        key: "leaderboard",
-        label: <Link href="/leaderboard">Leaderboard</Link>,
-        icon: <TrophyOutlined />,
-      },
+      { key: "hasil-belajar", icon: <BarChartOutlined />, label: "Hasil Belajar", path: "/report" },
+      { key: "leaderboard", icon: <TrophyOutlined />, label: "Leaderboard", path: "/leaderboard" },
     ],
   },
   {
-    key: "g-gamifikasi",
+    key: "manage-gamification",
     icon: <TrophyOutlined />,
     label: "Gamifikasi",
-    children: [
-      {
-        key: "badge",
-        label: <Link href="/badge">Badge Settings</Link>,
-        icon: <SettingOutlined />,
-      },
-    ],
+    basePath: "/badge",
+    children: [{ key: "badge", icon: <SettingOutlined />, label: "Badge Settings", path: "/badge" }],
   },
 ];
 
@@ -127,15 +121,15 @@ const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  const getActiveState = () => {
+  const resolvedItems = useMemo(() => resolveItems(allMenuItems), []);
+
+  const { activeKey, parentKey } = useMemo(() => {
     let activeKey = "dashboard";
     let parentKey = "";
 
-    const findActive = (items: MenuItem[], parent?: string) => {
+    const findActive = (items: ResolvedMenuItem[], parent?: string) => {
       for (const item of items) {
-        const labelProps = (item.label as React.ReactElement<{ href?: string }>)?.props;
-        const itemHref = labelProps?.href;
-        if (itemHref && pathname.startsWith(itemHref)) {
+        if (item.href && pathname.startsWith(item.href)) {
           activeKey = item.key;
           if (parent) parentKey = parent;
         }
@@ -145,30 +139,18 @@ const Sidebar: React.FC = () => {
       }
     };
 
-    findActive(allMenuItems);
-    if (pathname === "/dashboard") activeKey = "dashboard";
+    findActive(resolvedItems);
     return { activeKey, parentKey };
-  };
+  }, [pathname, resolvedItems]);
 
-  const { activeKey, parentKey } = getActiveState();
-
-  const defaultOpenKeys = useMemo(
-    () => (parentKey ? [parentKey] : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-  const [openKeys, setOpenKeys] = useState<string[]>(
-    collapsed ? [] : defaultOpenKeys
-  );
+  const [openKeys, setOpenKeys] = useState<string[]>(parentKey ? [parentKey] : []);
 
   const handleOpenChange = (keys: string[]) => {
     const latestOpenKey = keys.find((key) => !openKeys.includes(key));
-    if (latestOpenKey) {
-      setOpenKeys([latestOpenKey]);
-    } else {
-      setOpenKeys([]);
-    }
+    setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
   };
+
+  const menuItems = useMemo(() => toMenuProps(resolvedItems), [resolvedItems]);
 
   return (
     <ConfigProvider
@@ -265,7 +247,7 @@ const Sidebar: React.FC = () => {
               selectedKeys={[activeKey]}
               openKeys={openKeys}
               onOpenChange={handleOpenChange}
-              items={allMenuItems as MenuProps["items"]}
+              items={menuItems}
             />
           </div>
         </div>
