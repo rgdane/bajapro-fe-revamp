@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type {
-  ApiResponse,
   BulkCreateUsersDTO,
   BulkDeleteUsersDTO,
   BulkUpdateUsersDTO,
@@ -23,83 +22,98 @@ export function useUser() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(
-    (params?: UserFilterParams) => userServices.getUsers(params),
-    [],
-  );
-
-  const applyUsers = useCallback((res: ApiResponse<User[]>) => {
-    setUsers(res.data);
-    setTotal(res.total ?? res.data.length);
+  const fetchUsers = useCallback(async (params?: UserFilterParams) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await userServices.getUsers({ preload: true, ...params });
+      setUsers(res.data ?? []);
+      setTotal(res.total ?? res.data?.length ?? 0);
+      return res.data ?? [];
+    } catch (err) {
+      setError(toErrorMessage(err, "Gagal mengambil data user"));
+      return [];
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    let isActive = true;
-    load()
-      .then((res) => {
-        if (isActive) applyUsers(res);
-      })
-      .catch((err) => {
-        if (isActive) setError(toErrorMessage(err, "Gagal mengambil data user"));
-      })
-      .finally(() => {
-        if (isActive) setLoading(false);
-      });
-    return () => {
-      isActive = false;
-    };
-  }, [load, applyUsers]);
-
-  const fetchUsers = useCallback(
-    async (params?: UserFilterParams) => {
+    let active = true;
+    void (async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await load(params);
-        applyUsers(res);
+        const res = await userServices.getUsers({ preload: true });
+        if (!active) return;
+        setUsers(res.data ?? []);
+        setTotal(res.total ?? res.data?.length ?? 0);
       } catch (err) {
-        setError(toErrorMessage(err, "Gagal mengambil data user"));
+        if (active) setError(toErrorMessage(err, "Gagal mengambil data user"));
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-    },
-    [load, applyUsers],
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const getUserById = useCallback(
+    (id: number, preload = true) => userServices.getUserById(id, preload),
+    [],
   );
 
-  const wrap = useCallback(
-    async <T,>(fn: () => Promise<T>): Promise<T | undefined> => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await fn();
-        await fetchUsers();
-        return result;
-      } catch (err) {
-        setError(toErrorMessage(err, "Terjadi kesalahan"));
-        return undefined;
-      } finally {
-        setLoading(false);
-      }
+  const createUser = useCallback(
+    async (data: CreateUserDTO) => {
+      const res = await userServices.createUser(data);
+      await fetchUsers();
+      return res.data;
     },
     [fetchUsers],
   );
 
-  const fetchUserById = useCallback(
-    (id: number, preload?: boolean) => userServices.getUserById(id, preload),
-    [],
+  const updateUser = useCallback(
+    async (id: number, data: UpdateUserDTO) => {
+      const res = await userServices.updateUser(id, data);
+      await fetchUsers();
+      return res.data;
+    },
+    [fetchUsers],
   );
 
-  const createUser = useCallback((data: CreateUserDTO) => wrap(() => userServices.createUser(data)), [wrap]);
+  const deleteUser = useCallback(
+    async (id: number, isPermanent?: boolean) => {
+      await userServices.deleteUser(id, isPermanent);
+      await fetchUsers();
+    },
+    [fetchUsers],
+  );
 
-  const updateUser = useCallback((id: number, data: UpdateUserDTO) => wrap(() => userServices.updateUser(id, data)), [wrap]);
+  const bulkCreateUsers = useCallback(
+    async (data: BulkCreateUsersDTO) => {
+      const res = await userServices.bulkCreateUsers(data);
+      await fetchUsers();
+      return res.data;
+    },
+    [fetchUsers],
+  );
 
-  const deleteUser = useCallback((id: number, isPermanent?: boolean) => wrap(() => userServices.deleteUser(id, isPermanent)), [wrap]);
+  const bulkUpdateUsers = useCallback(
+    async (data: BulkUpdateUsersDTO) => {
+      await userServices.bulkUpdateUsers(data);
+      await fetchUsers();
+    },
+    [fetchUsers],
+  );
 
-  const bulkCreateUsers = useCallback((data: BulkCreateUsersDTO) => wrap(() => userServices.bulkCreateUsers(data)), [wrap]);
-
-  const bulkUpdateUsers = useCallback((data: BulkUpdateUsersDTO) => wrap(() => userServices.bulkUpdateUsers(data)), [wrap]);
-
-  const bulkDeleteUsers = useCallback((data: BulkDeleteUsersDTO, isPermanent?: boolean) => wrap(() => userServices.bulkDeleteUsers(data, isPermanent)), [wrap]);
+  const bulkDeleteUsers = useCallback(
+    async (data: BulkDeleteUsersDTO, isPermanent?: boolean) => {
+      await userServices.bulkDeleteUsers(data, isPermanent);
+      await fetchUsers();
+    },
+    [fetchUsers],
+  );
 
   return {
     users,
@@ -107,7 +121,7 @@ export function useUser() {
     loading,
     error,
     fetchUsers,
-    fetchUserById,
+    getUserById,
     createUser,
     updateUser,
     deleteUser,
