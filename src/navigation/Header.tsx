@@ -1,9 +1,19 @@
 "use client";
 
-import React from "react";
-import { usePathname } from "next/navigation";
-import { Layout, Breadcrumb, Space, Avatar, Typography, Dropdown, MenuProps } from "antd";
+import React, { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  App,
+  Layout,
+  Breadcrumb,
+  Space,
+  Avatar,
+  Typography,
+  Dropdown,
+  MenuProps,
+} from "antd";
 import { DownOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { authServices } from "@/features/auth/services/authServices";
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -15,7 +25,35 @@ const titleFromPath = (path: string) => {
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const { message } = App.useApp();
   const title = titleFromPath(pathname);
+
+  const [name, setName] = useState("Administrator");
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    authServices.getProfile().then((profile) => {
+      if (active && profile?.name) setName(profile.name);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await authServices.logout();
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      message.error("Gagal keluar");
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const items: MenuProps["items"] = [
     {
@@ -28,6 +66,8 @@ export const Header: React.FC = () => {
       icon: <LogoutOutlined />,
       danger: true,
       label: "Keluar",
+      disabled: loggingOut,
+      onClick: handleLogout,
     },
   ];
 
@@ -61,7 +101,7 @@ export const Header: React.FC = () => {
               fontWeight: "bold",
             }}
           >
-            A
+            {name.charAt(0).toUpperCase()}
           </Avatar>
           <Text
             style={{
@@ -70,7 +110,7 @@ export const Header: React.FC = () => {
               fontSize: "14px",
             }}
           >
-            Administrator
+            {name}
           </Text>
           <DownOutlined style={{ fontSize: "12px", color: "#531DAB", marginLeft: "4px" }} />
         </Space>
@@ -80,3 +120,4 @@ export const Header: React.FC = () => {
 };
 
 export default Header;
+

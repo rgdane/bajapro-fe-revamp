@@ -6,8 +6,8 @@ import type { SearchProps as AntSearchProps } from "antd/es/input/Search";
 
 const { Search: AntSearch } = AntInput;
 
-export interface InputProps extends AntInputProps {}
-export interface SearchProps extends AntSearchProps {}
+export type InputProps = AntInputProps;
+export type SearchProps = AntSearchProps;
 
 export const Input: React.FC<InputProps> = (props) => {
   return <AntInput {...props} />;

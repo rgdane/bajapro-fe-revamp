@@ -1,16 +1,28 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Card, Typography, Flex, Space } from "antd";
-import { PlusOutlined, SearchOutlined, FilterOutlined } from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined, FilterOutlined, EditOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Input";
 import { MasterTable } from "@/components/fragments/MasterTable";
 import type { MasterTableProps } from "@/components/fragments/MasterTable";
+import { MasterFormModal } from "@/components/fragments/MasterFormModal";
 
 const { Title, Paragraph } = Typography;
 
-export interface MasterTemplateProps {
+export type MasterModalMode = "create" | "edit";
+
+export interface MasterModalConfig<TValues extends object = Record<string, unknown>> {
+  title?: string;
+  fields: React.ReactNode | ((ctx: { mode: MasterModalMode }) => React.ReactNode);
+  onCreate: (values: TValues) => Promise<void> | void;
+  onUpdate: (values: TValues, record: TValues) => Promise<void> | void;
+  submitLoading?: boolean;
+}
+
+export interface MasterTemplateProps<TValues extends object = Record<string, unknown>> {
   title: string;
   subtitle?: string;
   onAdd?: () => void;
@@ -22,11 +34,12 @@ export interface MasterTemplateProps {
   onFilter?: () => void;
   showFilter?: boolean;
   extraActions?: React.ReactNode;
-  tableProps: Omit<MasterTableProps, "header">;
+  tableProps: Omit<MasterTableProps<TValues>, "header">;
+  modal?: MasterModalConfig<TValues>;
   children?: React.ReactNode;
 }
 
-export const MasterTemplate: React.FC<MasterTemplateProps> = ({
+export function MasterTemplate<TValues extends object = Record<string, unknown>>({
   title,
   subtitle,
   onAdd,
@@ -39,8 +52,52 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
   showFilter = true,
   extraActions,
   tableProps,
+  modal,
   children,
-}) => {
+}: MasterTemplateProps<TValues>) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<MasterModalMode>("create");
+  const [editingRecord, setEditingRecord] = useState<TValues | null>(null);
+
+  const columns = useMemo<ColumnsType<TValues>>(() => {
+    if (!modal) return tableProps.columns ?? [];
+    const actionColumn = {
+      title: "Aksi",
+      key: "action",
+      width: 120,
+      render: (_: unknown, record: TValues) => (
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          onClick={() => {
+            setModalMode("edit");
+            setEditingRecord(record);
+            setModalOpen(true);
+          }}
+        >
+          Edit
+        </Button>
+      ),
+    };
+    return [...(tableProps.columns ?? []), actionColumn];
+  }, [modal, tableProps.columns]);
+
+  const handleAdd = () => {
+    if (modal) {
+      setModalMode("create");
+      setEditingRecord(null);
+      setModalOpen(true);
+    } else {
+      onAdd?.();
+    }
+  };
+
+  const fields = modal
+    ? typeof modal.fields === "function"
+      ? modal.fields({ mode: modalMode })
+      : modal.fields
+    : null;
+
   return (
     <div style={{ padding: 24 }}>
       <Card
@@ -66,12 +123,12 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
           gap={16}
           style={{ marginBottom: 16 }}
         >
-          {onAdd ? (
+          {onAdd || modal ? (
             <Button
               type="primary"
               size="large"
               icon={<PlusOutlined />}
-              onClick={onAdd}
+              onClick={handleAdd}
               style={{
                 backgroundColor: "#7246BA",
                 borderRadius: 8,
@@ -108,12 +165,36 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
           </Space>
         </Flex>
 
-        <MasterTable {...tableProps} />
+        <MasterTable {...tableProps} columns={columns} />
+
+        {modal && (
+          <MasterFormModal<TValues>
+            open={modalOpen}
+            mode={modalMode}
+            title={modal.title}
+            onCancel={() => setModalOpen(false)}
+            onSubmit={async (values) => {
+              try {
+                if (modalMode === "create") {
+                  await modal.onCreate(values);
+                } else if (editingRecord) {
+                  await modal.onUpdate(values, editingRecord);
+                }
+                setModalOpen(false);
+              } catch {
+                setModalOpen(false);
+              }
+            }}
+            submitLoading={modal.submitLoading}
+            initialValues={modalMode === "edit" && editingRecord ? editingRecord : undefined}
+            fields={fields}
+          />
+        )}
 
         {children}
       </Card>
     </div>
   );
-};
+}
 
 export default MasterTemplate;

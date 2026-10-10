@@ -14,9 +14,9 @@ import {
   SettingOutlined,
   TrophyOutlined,
   QuestionCircleOutlined,
-  SafetyCertificateOutlined,
   DeploymentUnitOutlined,
   BankOutlined,
+  ApartmentOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, ConfigProvider, Button } from "antd";
 import type { MenuProps } from "antd";
@@ -91,8 +91,8 @@ export const allMenuItems: MenuItem[] = [
     label: "Kelola Pengguna",
     basePath: "/manage-user",
     children: [
-      { key: "roles", icon: <SafetyCertificateOutlined />, label: "Roles" },
       { key: "kelas", icon: <BankOutlined />, label: "Kelas" },
+      { key: "sekolah", icon: <ApartmentOutlined />, label: "Sekolah" },
       { key: "user", icon: <TeamOutlined />, label: "Users" },
       { key: "approval", icon: <AppstoreAddOutlined />, label: "Approval" },
       { key: "permission", icon: <SettingOutlined />, label: "Permission" },

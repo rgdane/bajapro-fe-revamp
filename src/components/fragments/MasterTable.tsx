@@ -5,18 +5,18 @@ import { Card, Flex } from "antd";
 import { Table, TableProps } from "@/components/ui/Table";
 import type { TablePaginationConfig } from "antd/es/table";
 
-export interface MasterTableProps<T = any> extends TableProps<T> {
+export interface MasterTableProps<T extends object = Record<string, unknown>>
+  extends TableProps<T> {
   loading?: boolean;
   paginationConfig?: TablePaginationConfig;
   onChangeTable?: TableProps<T>["onChange"];
   header?: React.ReactNode;
 }
 
-export function MasterTable<T extends object = any>({
+export function MasterTable<T extends object = Record<string, unknown>>({
   loading = false,
   paginationConfig,
   onChangeTable,
-  title,
   ...props
 }: MasterTableProps<T>) {
   const defaultPagination: TablePaginationConfig = {
@@ -29,12 +29,14 @@ export function MasterTable<T extends object = any>({
 
   return (
     <Card
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
       style={{ borderRadius: 8, overflow: "hidden" }}
     >
       <Flex vertical>
         <Table<T>
-          rowKey={(record: any) => record.id ?? JSON.stringify(record)}
+          rowKey={(record: T) =>
+            (record as unknown as { id?: React.Key }).id ?? JSON.stringify(record)
+          }
           loading={loading}
           pagination={defaultPagination}
           onChange={onChangeTable}
