@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { App, Popconfirm, Space, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { MasterTemplate } from "@/components/templates/MasterTemplate";
 import { Button } from "@/components/ui/Button";
 import { useCourse } from "../hooks/useCourse";
@@ -93,13 +93,6 @@ export default function MasterCourse() {
               onClick={() => router.push(`/manage-material/course/${record.id}`)}
             >
               Detail
-            </Button>
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => router.push(`/manage-material/course/${record.id}`)}
-            >
-              Edit
             </Button>
             <Popconfirm
               title="Hapus course ini?"
