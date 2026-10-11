@@ -78,7 +78,7 @@ export const allMenuItems: MenuItem[] = [
     key: "manage-course",
     icon: <BookOutlined />,
     label: "Kelola Materi",
-    basePath: "/manage-user",
+    basePath: "/manage-material",
     children: [
       { key: "level", icon: <DeploymentUnitOutlined />, label: "Level" },
       { key: "course", icon: <BlockOutlined />, label: "Course" },
