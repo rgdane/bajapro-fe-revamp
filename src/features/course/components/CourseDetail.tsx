@@ -2,12 +2,13 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { App, Card, Flex, Segmented, Space, Spin, Typography } from "antd";
+import { App, Card, Flex, Segmented, Spin, Typography } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Button } from "@/components/ui/Button";
 import { useCourseDetail } from "../hooks/useCourseDetail";
 import { CourseDetailTab } from "./CourseDetailTab";
 import { LessonTab } from "./LessonTab";
+import { SubLessonMaterialTab } from "./SubLessonMaterialTab";
 import type { CreateCourseDTO } from "../types/courseTypes";
 
 const { Title, Paragraph } = Typography;
@@ -110,13 +111,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
             <LessonTab courseId={courseId} />
           )}
 
-          {activeTab === "materials" && !isCreate && (
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Paragraph type="secondary">
-                Tab Sub Lessons & Materials akan tersedia setelah task
-                berikutnya.
-              </Paragraph>
-            </Space>
+          {activeTab === "materials" && !isCreate && courseId !== null && (
+            <SubLessonMaterialTab courseId={courseId} />
           )}
         </Spin>
       </Card>
