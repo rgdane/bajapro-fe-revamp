@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { App, Button, Card, Form, Input, Typography } from "antd";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { authServices } from "@/features/auth/services/authServices";
+import { AuthLayout } from "@/features/auth/components/AuthLayout";
 
 const { Title, Paragraph } = Typography;
 
@@ -36,16 +38,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
-      <Card style={{ width: 400, borderRadius: 12 }}>
+    <AuthLayout>
+      <Card style={{ width: "100%", borderRadius: 12 }}>
         <Title level={3} style={{ marginBottom: 4, color: "#531DAB" }}>
           BAJAPRO
         </Title>
@@ -96,7 +90,14 @@ export default function LoginPage() {
             Masuk
           </Button>
         </Form>
+
+        <Paragraph style={{ textAlign: "center", marginTop: 16, marginBottom: 0 }}>
+          Belum punya akun?{" "}
+          <Link href="/register" style={{ color: "#531DAB" }}>
+            Daftar
+          </Link>
+        </Paragraph>
       </Card>
-    </div>
+    </AuthLayout>
   );
 }

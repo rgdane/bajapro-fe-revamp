@@ -19,3 +19,23 @@ export interface LoginResult {
   user?: AuthUser;
   error?: string;
 }
+
+export type RegisterRole = "student" | "teacher";
+
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: RegisterRole;
+  nip?: string | null;
+  class_code?: string;
+  school_id?: number;
+  proposed_school_name?: string;
+}
+
+export interface RegisterResult {
+  success: boolean;
+  user?: AuthUser;
+  pending?: boolean;
+  error?: string;
+}
