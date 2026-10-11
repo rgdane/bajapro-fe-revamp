@@ -145,11 +145,15 @@ export function SubLessonMaterialTab({ courseId }: SubLessonMaterialTabProps) {
     setSubModalOpen(true);
   }, [subForm]);
 
-  const openSubEdit = useCallback((record: SubLesson) => {
-    setSubModalMode("edit");
-    setEditingSub(record);
-    setSubModalOpen(true);
-  }, []);
+  const openSubEdit = useCallback(
+    (record: SubLesson) => {
+      setSubModalMode("edit");
+      setEditingSub(record);
+      subForm.setFieldsValue({ title: record.title });
+      setSubModalOpen(true);
+    },
+    [subForm],
+  );
 
   const closeSubModal = useCallback(() => {
     setSubModalOpen(false);

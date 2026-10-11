@@ -89,11 +89,19 @@ export function LessonTab({ courseId }: LessonTabProps) {
     [form],
   );
 
-  const openEdit = useCallback((record: Lesson) => {
-    setModalMode("edit");
-    setEditing(record);
-    setModalOpen(true);
-  }, []);
+  const openEdit = useCallback(
+    (record: Lesson) => {
+      setModalMode("edit");
+      setEditing(record);
+      form.setFieldsValue({
+        level_id: record.level_id,
+        title: record.title,
+        description: record.description,
+      });
+      setModalOpen(true);
+    },
+    [form],
+  );
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
