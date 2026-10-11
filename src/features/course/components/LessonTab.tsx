@@ -169,7 +169,7 @@ export function LessonTab({ courseId }: LessonTabProps) {
 
   return (
     <>
-      <Space direction="vertical" style={{ width: "100%" }} size={16}>
+      <Space orientation="vertical" style={{ width: "100%" }} size={16}>
         {levels.length === 0 ? (
           <Empty description="Belum ada level aktif" />
         ) : (
@@ -209,7 +209,7 @@ export function LessonTab({ courseId }: LessonTabProps) {
                       Belum ada lesson.
                     </Paragraph>
                   ) : (
-                    <Space direction="vertical" style={{ width: "100%" }}>
+                    <Space orientation="vertical" style={{ width: "100%" }}>
                       {items.map((lesson) => (
                         <div
                           key={lesson.id}

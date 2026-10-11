@@ -297,7 +297,7 @@ export function SubLessonMaterialTab({ courseId }: SubLessonMaterialTabProps) {
   );
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size={16}>
+    <Space orientation="vertical" style={{ width: "100%" }} size={16}>
       <div>
         <Text strong>Pilih Lesson</Text>
         <Select
@@ -331,7 +331,7 @@ export function SubLessonMaterialTab({ courseId }: SubLessonMaterialTabProps) {
               Belum ada sub lesson.
             </Paragraph>
           ) : (
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space orientation="vertical" style={{ width: "100%" }}>
               {subLessons.map((sub) => (
                 <div
                   key={sub.id}
@@ -398,7 +398,7 @@ export function SubLessonMaterialTab({ courseId }: SubLessonMaterialTabProps) {
           {materials.length === 0 ? (
             <Empty description="Belum ada material" />
           ) : (
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space orientation="vertical" style={{ width: "100%" }}>
               {materials.map((mat) => (
                 <div
                   key={mat.id}
