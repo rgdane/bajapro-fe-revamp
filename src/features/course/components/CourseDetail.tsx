@@ -7,6 +7,7 @@ import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Button } from "@/components/ui/Button";
 import { useCourseDetail } from "../hooks/useCourseDetail";
 import { CourseDetailTab } from "./CourseDetailTab";
+import { LessonTab } from "./LessonTab";
 import type { CreateCourseDTO } from "../types/courseTypes";
 
 const { Title, Paragraph } = Typography;
@@ -105,12 +106,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
             />
           )}
 
-          {activeTab === "lessons" && !isCreate && (
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Paragraph type="secondary">
-                Tab Lessons akan tersedia setelah task berikutnya.
-              </Paragraph>
-            </Space>
+          {activeTab === "lessons" && !isCreate && courseId !== null && (
+            <LessonTab courseId={courseId} />
           )}
 
           {activeTab === "materials" && !isCreate && (
