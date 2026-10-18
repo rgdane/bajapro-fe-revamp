@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { App, Popconfirm, Space, Tag } from "antd";
+import { App, Image, Popconfirm, Space, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { MasterTemplate } from "@/components/templates/MasterTemplate";
@@ -49,6 +49,24 @@ export default function MasterCourse() {
         key: "no",
         width: 60,
         render: (_v, _r, index) => index + 1,
+      },
+      {
+        title: "Thumbnail",
+        key: "img_thumbnail",
+        width: 110,
+        render: (_, record) =>
+          record.img_thumbnail ? (
+            <Image
+              src={record.img_thumbnail}
+              alt={record.course_name}
+              width={72}
+              height={48}
+              style={{ objectFit: "cover", borderRadius: 6 }}
+              preview={{ mask: "Lihat" }}
+            />
+          ) : (
+            "—"
+          ),
       },
       { title: "Nama Course", dataIndex: "course_name", key: "course_name" },
       {
