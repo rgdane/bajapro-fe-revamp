@@ -17,6 +17,7 @@ import {
 } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button } from "@/components/ui/Button";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { courseServices } from "../services/courseServices";
 import type {
   CreateMaterialDTO,
@@ -507,7 +508,7 @@ export function SubLessonMaterialTab({ courseId }: SubLessonMaterialTabProps) {
               name="materials"
               rules={[{ required: true, message: "Materi wajib diisi" }]}
             >
-              <Input.TextArea rows={6} placeholder="Tulis materi di sini" />
+              <RichTextEditor placeholder="Tulis materi di sini" />
             </Form.Item>
           )}
         </Form>
