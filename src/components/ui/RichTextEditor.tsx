@@ -25,7 +25,8 @@ import {
   UndoOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
-import { Button, Space, Tooltip } from "antd";
+import { App, Button, Space, Tooltip } from "antd";
+import { uploadService } from "@/features/course/services/uploadService";
 
 const lowlight = createLowlight(common);
 lowlight.register("java", java);
@@ -34,13 +35,18 @@ export interface RichTextEditorProps {
   value?: string;
   onChange?: (html: string) => void;
   placeholder?: string;
+  /** Unggah gambar; default memakai endpoint upload backend. */
+  uploadImage?: (file: File) => Promise<string>;
 }
 
 export function RichTextEditor({
   value = "",
   onChange,
   placeholder = "Tulis materi di sini...",
+  uploadImage = uploadService.uploadImage,
 }: RichTextEditorProps) {
+  const { message } = App.useApp();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -84,10 +90,13 @@ export function RichTextEditor({
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   };
 
-  const setImage = () => {
-    const url = window.prompt("URL gambar", "https://");
-    if (!url) return;
-    editor.chain().focus().setImage({ src: url }).run();
+  const handleImageFile = async (file: File) => {
+    try {
+      const url = await uploadImage(file);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "Gagal mengunggah gambar");
+    }
   };
 
   return (
@@ -196,14 +205,25 @@ export function RichTextEditor({
               onClick={setLink}
             />
           </Tooltip>
-          <Tooltip title="Gambar (URL)">
+          <Tooltip title="Unggah gambar">
             <Button
               size="small"
               type="text"
               icon={<PictureOutlined />}
-              onClick={setImage}
+              onClick={() => fileInputRef.current?.click()}
             />
           </Tooltip>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleImageFile(file);
+              e.target.value = "";
+            }}
+          />
           <Tooltip title="Rata kiri">
             <Button
               size="small"

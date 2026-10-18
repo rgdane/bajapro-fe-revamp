@@ -101,6 +101,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         <Spin spinning={loading}>
           {activeTab === "detail" && (
             <CourseDetailTab
+              key={course?.id ?? "new"}
               course={course}
               saving={saving}
               onSubmit={handleSaveCourse}
